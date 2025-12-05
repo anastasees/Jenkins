@@ -16,11 +16,8 @@ pipeline {
         }
 
         stage('Test') {
-            agent {
-                docker {
-                    image 'python:3.9-slim' 
-                }
-            }
+            agent any 
+            
             steps {
                 sh 'pip install -r requirements.txt'
                 sh 'python app_tests.py'
