@@ -1,27 +1,39 @@
 pipeline {
+    // 'any' означає, що код виконується прямо на вашому комп'ютері (host machine)
     agent any
 
     environment {
+        // ВАЖЛИВО: Ваш логін Docker Hub
         DOCKERHUB_USERNAME = 'anastasees' 
         APP_NAME = 'meter-service'
+        // ID, який ви створили в Jenkins (Manage Jenkins -> Credentials)
         DOCKER_CREDS_ID = 'dockerhub-creds' 
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Завантажуємо код з GitHub
                 checkout scm
             }
         }
 
         stage('Test') {
-           
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'python app_tests.py'
+                script {
+                    echo 'Installing requirements...'
+                    // Використовуємо 'bat' для Windows команд
+                    // pip має бути у вас в PATH
+                    bat 'pip install -r requirements.txt'
+                    
+                    echo 'Running tests...'
+                    // Запускаємо тестування
+                    bat 'python app_tests.py'
+                }
             }
             post {
                 always {
+                    // Збираємо XML звіти (переконайтесь, що xmlrunner створює їх)
                     junit 'test-reports/*.xml'
                 }
             }
@@ -31,8 +43,8 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    // Тут ми на Windows, тому використовуємо bat
-                    bat "docker build -t %DOCKERHUB_USERNAME%/%APP_NAME%:latest -t %DOCKERHUB_USERNAME%/%APP_NAME%:%BUILD_NUMBER% ."
+                    // ${env.BUILD_NUMBER} - це змінна Jenkins, Groovy підставить її сам
+                    bat "docker build -t ${DOCKERHUB_USERNAME}/${APP_NAME}:latest -t ${DOCKERHUB_USERNAME}/${APP_NAME}:${env.BUILD_NUMBER} ."
                 }
             }
         }
@@ -41,12 +53,14 @@ pipeline {
             steps {
                 script {
                     echo 'Pushing to Docker Hub...'
+                    // Використовуємо збережені паролі
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDS_ID, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        // Використовуємо bat для логіну та пушу
-                        // У bat змінні оточення викликаються через %VAR%
-                        bat 'echo %PASS% | docker login -u %USER% --password-stdin'
-                        bat "docker push %DOCKERHUB_USERNAME%/%APP_NAME%:latest"
-                        bat "docker push %DOCKERHUB_USERNAME%/%APP_NAME%:%BUILD_NUMBER%"
+                        // Логін (Windows синтаксис для передачі пароля трохи складний, але цей має працювати)
+                        // Ми використовуємо Groovy інтерполяцію ${PASS}, щоб вставити пароль
+                        bat "docker login -u ${USER} -p ${PASS}"
+                        
+                        bat "docker push ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+                        bat "docker push ${DOCKERHUB_USERNAME}/${APP_NAME}:${env.BUILD_NUMBER}"
                     }
                 }
             }
