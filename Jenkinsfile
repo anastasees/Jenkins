@@ -49,15 +49,14 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
+       stage('Push to Docker Hub') {
             steps {
                 script {
                     echo 'Pushing to Docker Hub...'
-                    // Використовуємо збережені паролі
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDS_ID, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        // Логін (Windows синтаксис для передачі пароля трохи складний, але цей має працювати)
-                        // Ми використовуємо Groovy інтерполяцію ${PASS}, щоб вставити пароль
-                        bat "docker login -u ${USER} -p ${PASS}"
+                        // ЗМІНА ТУТ: Використовуємо одинарні лапки і %ЗМІННА%
+                        // Це дозволяє Windows взяти пароль напряму з середовища, не "ламаючи" команду
+                        bat 'docker login -u %USER% -p %PASS%'
                         
                         bat "docker push ${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
                         bat "docker push ${DOCKERHUB_USERNAME}/${APP_NAME}:${env.BUILD_NUMBER}"
