@@ -24,7 +24,7 @@ pipeline {
                     echo 'Installing requirements...'
                     // Використовуємо 'bat' для Windows команд
                     // pip має бути у вас в PATH
-                    bat 'pip install -r requirements.txt'
+                    bat 'python -m pip install -r requirements.txt'
                     
                     echo 'Running tests...'
                     // Запускаємо тестування
