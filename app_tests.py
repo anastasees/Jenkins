@@ -1,4 +1,5 @@
 import unittest
+import xmlrunner  # <--- Додаємо імпорт
 from lab_4 import app, meter_service
 
 class FlaskAppTests(unittest.TestCase):
@@ -18,4 +19,9 @@ class FlaskAppTests(unittest.TestCase):
         self.assertIn('999', meter_service.meters)
 
 if __name__ == '__main__':
-    unittest.main()
+    # Змінюємо запуск на XMLTestRunner
+    # output='test-reports' створює папку зі звітами
+    runner = xmlrunner.XMLTestRunner(output='test-reports')
+    unittest.main(testRunner=runner)
+    
+    # Старий рядок unittest.main() видаляємо
