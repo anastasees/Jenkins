@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // ВАЖЛИВО: Ваш логін Docker Hub
         DOCKERHUB_USERNAME = 'anastasees' 
         APP_NAME = 'meter-service'
         DOCKER_CREDS_ID = 'dockerhub-creds' 
@@ -16,8 +15,13 @@ pipeline {
         }
 
         stage('Test') {
-            agent any 
-            
+            agent {
+                docker {
+                    // Це працює в Linux контейнері, тому тут потрібен sh.
+                    // Крок 1 з інструкції вище критично важливий для цього етапу!
+                    image 'python:3.9-slim' 
+                }
+            }
             steps {
                 sh 'pip install -r requirements.txt'
                 sh 'python app_tests.py'
@@ -33,7 +37,8 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker Image...'
-                    sh "docker build -t $DOCKERHUB_USERNAME/$APP_NAME:latest -t $DOCKERHUB_USERNAME/$APP_NAME:${env.BUILD_NUMBER} ."
+                    // Тут ми на Windows, тому використовуємо bat
+                    bat "docker build -t %DOCKERHUB_USERNAME%/%APP_NAME%:latest -t %DOCKERHUB_USERNAME%/%APP_NAME%:%BUILD_NUMBER% ."
                 }
             }
         }
@@ -43,9 +48,11 @@ pipeline {
                 script {
                     echo 'Pushing to Docker Hub...'
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDS_ID, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh "docker push $DOCKERHUB_USERNAME/$APP_NAME:latest"
-                        sh "docker push $DOCKERHUB_USERNAME/$APP_NAME:${env.BUILD_NUMBER}"
+                        // Використовуємо bat для логіну та пушу
+                        // У bat змінні оточення викликаються через %VAR%
+                        bat 'echo %PASS% | docker login -u %USER% --password-stdin'
+                        bat "docker push %DOCKERHUB_USERNAME%/%APP_NAME%:latest"
+                        bat "docker push %DOCKERHUB_USERNAME%/%APP_NAME%:%BUILD_NUMBER%"
                     }
                 }
             }
