@@ -19,7 +19,7 @@ pipeline {
                 docker {
                     // Це працює в Linux контейнері, тому тут потрібен sh.
                     // Крок 1 з інструкції вище критично важливий для цього етапу!
-                    image 'python:3.9-slim' 
+                    image 'python:3.11-slim' 
                 }
             }
             steps {
