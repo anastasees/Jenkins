@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         // ВАЖЛИВО: Ваш логін Docker Hub
-        DOCKERHUB_USERNAME = 'anastasees' 
+        DOCKERHUB_USERNAME = 'anastasiiaslastnikova' 
         APP_NAME = 'meter-service'
         // ID, який ви створили в Jenkins (Manage Jenkins -> Credentials)
         DOCKER_CREDS_ID = 'dockerhub-creds' 
